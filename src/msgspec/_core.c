@@ -6922,13 +6922,9 @@ static PyObject *
 msgspec_defstruct(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *name = NULL, *fields = NULL, *bases = NULL, *module = NULL, *namespace = NULL;
-    PyObject *arg_tag_field = NULL, *arg_tag = NULL, *arg_rename = NULL;
     PyObject *new_bases = NULL, *annotations = NULL, *fields_fast = NULL, *out = NULL;
     PyObject *create_args = NULL, *create_kwargs = NULL;
-    int arg_omit_defaults = -1, arg_forbid_unknown_fields = -1;
-    int arg_frozen = -1, arg_eq = -1, arg_order = -1, arg_kw_only = 0;
-    int arg_repr_omit_defaults = -1, arg_array_like = -1;
-    int arg_gc = -1, arg_weakref = -1, arg_dict = -1, arg_cache_hash = -1;
+    PyObject *config_kwargs[15] = {NULL};
 
     char *kwlist[] = {
         "name", "fields", "bases", "module", "namespace",
@@ -6942,15 +6938,16 @@ msgspec_defstruct(PyObject *self, PyObject *args, PyObject *kwargs)
 
     /* Parse arguments: (name, bases, dict) */
     if (!PyArg_ParseTupleAndKeywords(
-            args, kwargs, "UO|$OOOOOOpppppppppppp:defstruct", kwlist,
+            args, kwargs, "UO|$OOOOOOOOOOOOOOOOOO:defstruct", kwlist,
             &name, &fields, &bases, &module, &namespace,
-            &arg_tag_field, &arg_tag, &arg_rename,
-            &arg_omit_defaults, &arg_forbid_unknown_fields,
-            &arg_frozen, &arg_eq, &arg_order, &arg_kw_only,
-            &arg_repr_omit_defaults, &arg_array_like,
-            &arg_gc, &arg_weakref, &arg_dict, &arg_cache_hash)
+            &config_kwargs[0], &config_kwargs[1], &config_kwargs[2],
+            &config_kwargs[3], &config_kwargs[4], &config_kwargs[5],
+            &config_kwargs[6], &config_kwargs[7], &config_kwargs[8],
+            &config_kwargs[9], &config_kwargs[10], &config_kwargs[11],
+            &config_kwargs[12], &config_kwargs[13], &config_kwargs[14])
     )
         return NULL;
+    (void)config_kwargs;
 
     MsgspecState *mod = msgspec_get_state(self);
 

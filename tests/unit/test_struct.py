@@ -2245,6 +2245,60 @@ class TestDefStruct:
             with pytest.raises(TypeError, match="Extra positional arguments"):
                 cls(1, 2)
 
+    def test_defstruct_config_flag_bool_called_once(self):
+        class Flag:
+            def __init__(self):
+                self.calls = 0
+
+            def __bool__(self):
+                self.calls += 1
+                return self.calls == 1
+
+        flag = Flag()
+        Dynamic = defstruct("Dynamic", [("x", int)], frozen=flag)
+        assert flag.calls == 1
+        assert Dynamic.__struct_config__.frozen is True
+
+        flag = Flag()
+
+        class Static(Struct, frozen=flag):
+            x: int
+
+        assert flag.calls == 1
+        assert Static.__struct_config__.frozen is True
+        assert Dynamic.__struct_config__.frozen == Static.__struct_config__.frozen
+
+    def test_defstruct_config_flag_omitted_applies_metaclass_default(self):
+        class CustomMeta(msgspec.StructMeta):
+            def __new__(mcls, name, bases, namespace, **kwargs):
+                kwargs.setdefault("frozen", True)
+                return super().__new__(mcls, name, bases, namespace, **kwargs)
+
+        class Base(Struct, metaclass=CustomMeta):
+            pass
+
+        Default = defstruct("Default", [], bases=(Base,))
+        Explicit = defstruct("Explicit", [], bases=(Base,), frozen=False)
+
+        assert Default.__struct_config__.frozen is True
+        assert Explicit.__struct_config__.frozen is False
+        assert defstruct("Plain", []).__struct_config__.frozen is False
+
+    def test_defstruct_config_flag_omitted_does_not_call_bool(self):
+        class Flag:
+            def __init__(self):
+                self.calls = 0
+
+            def __bool__(self):
+                self.calls += 1
+                return True
+
+        flag = Flag()
+        Dynamic = defstruct("Dynamic", [], namespace={"flag": flag})
+
+        assert Dynamic.flag is flag
+        assert flag.calls == 0
+
     def test_defstruct_default_metaclass(self):
         Point = defstruct("Point", ["x", "y"])
         assert type(Point) is msgspec.StructMeta
